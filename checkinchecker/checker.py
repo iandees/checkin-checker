@@ -18,22 +18,33 @@ tags_to_check = [
     'short_name',
     'ref',
 ]
-default_overpass_radius = float(os.environ.get('OVERPASS_DEFAULT_RADIUS', "500.0"))
+default_overpass_radius = float(os.environ.get('OVERPASS_DEFAULT_RADIUS', "300.0"))
 default_overpass_timeout = int(os.environ.get('OVERPASS_DEFAULT_TIMEOUT', "60"))
 match_cutoff = int(os.environ.get('MATCH_CUTOFF', "60"))
 
 # Stuff to add to the Overpass query based on Foursquare category ID
 overrides_for_4sq_categories = {
-    '4f2a25ac4b909258e854f55f': {"extra": '["place"]'}, # Neighborhood
-    '4bf58dd8d48988d1ed931735': {"extra": '["aeroway"]', "radius": 1500.0}, # Airport
-    '4d954b06a243a5684965b473': {"extra": '["building"]'}, # Residential buildings (apartments/condos)
-    '4dfb90c6bd413dd705e8f897': {"extra": '["building"]'}, # Residential buildings (apartments/condos)
-    '4bf58dd8d48988d17e941735': {"extra": '["amenity"]'}, # Indie movie theater
-    '4bf58dd8d48988d1c4941735': {"extra": '["amenity"]'}, # Restaurant
-    '4bf58dd8d48988d1f9941735': {"extra": '["amenity"]'}, # Food and Drink
-    '4bf58dd8d48988d1d1941735': {"extra": '["amenity"]'}, # Noodle House
-    '4bf58dd8d48988d110951735': {"extra": '["shop"]'}, # Salon / Barbershop
-    '4bf58dd8d48988d163941735': {"extra": '["leisure"]'}, # Park
+    '4f2a25ac4b909258e854f55f': {"extra": '["place"]'},  # Neighborhood
+    '4bf58dd8d48988d1ed931735': {"extra": '["aeroway"]', "radius": 1500.0},  # Airport
+    '4d954b06a243a5684965b473': {"extra": '["building"]'},  # Residential buildings (apartments/condos)
+    '4dfb90c6bd413dd705e8f897': {"extra": '["building"]'},  # Residential buildings (apartments/condos)
+    '4bf58dd8d48988d17e941735': {"extra": '["amenity"]'},  # Indie movie theater
+    '4bf58dd8d48988d1c4941735': {"extra": '["amenity"]'},  # Restaurant
+    '4bf58dd8d48988d1f9941735': {"extra": '["amenity"]'},  # Food and Drink
+    '4bf58dd8d48988d1d1941735': {"extra": '["amenity"]'},  # Noodle House
+    '4bf58dd8d48988d110951735': {"extra": '["shop"]'},  # Salon / Barbershop
+    '4bf58dd8d48988d163941735': {"extra": '["leisure"]'},  # Park
+    '4bf58dd8d48988d10c941735': {"extra": '["amenity"]'},  # French Restaurant
+    '4bf58dd8d48988d14e941735': {"extra": '["amenity"]'},  # American Restaurant
+    '4bf58dd8d48988d1c1941735': {"extra": '["amenity"]'},  # Mexican Restaurant
+    '4bf58dd8d48988d1fa931735': {"extra": '["tourism"]'},  # Hotel
+    '4bf58dd8d48988d1e0931735': {"extra": '["amenity"]'},  # Coffee Shop
+    '4bf58dd8d48988d14f941735': {"extra": '["amenity"]'},  # Southern Food Restaurant
+    '4bf58dd8d48988d16e941735': {"extra": '["amenity"]'},  # Fast Food Restaurant
+    '4bf58dd8d48988d14a941735': {"extra": '["amenity"]'},  # Vietnamese Restaurant
+    '4bf58dd8d48988d112951735': {"extra": '["shop"]'},  # Hardware Store
+    '4bf58dd8d48988d116941735': {"extra": '["amenity"]'},  # Bar
+    '5032872391d4c4b30a586d64': {"extra": '["amenity"]'},  # Electric Vehicle Charging Station
 }
 
 def build_overpass_query(lat, lon, radius, query_extra=None, timeout=None):
@@ -42,18 +53,16 @@ def build_overpass_query(lat, lon, radius, query_extra=None, timeout=None):
 
     query_parts = []
     for t in tags_to_check:
-        for i in ('node', 'way', 'relation'):
-            query_part = '{prim_type}["{tag}"][!"highway"]{query_extra}(around:{radius},{lat},{lng});'.format(
-                prim_type=i,
-                tag=t,
-                query_extra=query_extra if query_extra else "",
-                radius=radius,
-                lat=round(lat, 6),
-                lng=round(lon, 6),
-            )
-            query_parts.append(query_part)
+        query_part = 'nwr["{tag}"][!"highway"]{query_extra}(around:{radius},{lat},{lng});'.format(
+            tag=t,
+            query_extra=query_extra if query_extra else "",
+            radius=radius,
+            lat=round(lat, 6),
+            lng=round(lon, 6),
+        )
+        query_parts.append(query_part)
 
-    query = '[out:json][timeout:{}];(\n{});out body;'.format(
+    query = '[out:json][timeout:{}];({});out body;'.format(
             timeout,
             ''.join(query_parts),
         )
